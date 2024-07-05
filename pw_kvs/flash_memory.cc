@@ -124,11 +124,27 @@ StatusWithSize FlashPartition::Write(Address address, span<const byte> data) {
     return StatusWithSize::PermissionDenied();
   }
   PW_TRY_WITH_SIZE(CheckBounds(address, data.size()));
-  const size_t address_alignment_offset = address % alignment_bytes();
-  PW_CHECK_UINT_EQ(address_alignment_offset, 0u);
-  const size_t size_alignment_offset = data.size() % alignment_bytes();
-  PW_CHECK_UINT_EQ(size_alignment_offset, 0u);
-  return flash_.Write(PartitionToFlashAddress(address), data);
+
+    size_t offset = 0;
+  while (offset < data.size()) {
+    const Address current_address = address + offset;
+    const Address sector_end_address = (current_address / sector_size_bytes()) * sector_size_bytes() + sector_size_bytes();
+    const size_t bytes_to_write = std::min(static_cast<size_t>(sector_end_address - current_address), data.size() - offset);
+
+    const size_t address_alignment_offset = current_address % alignment_bytes();
+    PW_CHECK_UINT_EQ(address_alignment_offset, 0u);
+    const size_t size_alignment_offset = bytes_to_write % alignment_bytes();
+    PW_CHECK_UINT_EQ(size_alignment_offset, 0u);
+
+    // Write the current chunk
+    StatusWithSize status = flash_.Write(PartitionToFlashAddress(current_address), data.subspan(offset, bytes_to_write));
+    if (!status.ok()) {
+      return status;
+    }
+
+    offset += bytes_to_write;
+  }
+  return StatusWithSize(data.size());
 }
 
 Status FlashPartition::IsRegionErased(Address source_flash_address,
