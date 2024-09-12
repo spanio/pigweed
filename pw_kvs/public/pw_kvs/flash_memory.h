@@ -24,6 +24,7 @@
 #include "pw_span/span.h"
 #include "pw_status/status.h"
 #include "pw_status/status_with_size.h"
+#include "cmsis_os2.h"
 
 #if PW_CXX_STANDARD_IS_SUPPORTED(17)  // Requires C++17 for pw::Result
 #include "pw_stream/seek.h"
@@ -131,6 +132,8 @@ class FlashMemory {
   constexpr std::byte erased_memory_content() const {
     return erased_memory_content_;
   }
+
+  virtual void SetBlockingMode(bool en_blocking, osThreadId_t task_handle) = 0;
 
  private:
   const uint32_t sector_size_;
