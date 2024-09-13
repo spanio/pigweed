@@ -119,7 +119,7 @@ pw_add_library_generic(pw_build.pedantic_warnings INTERFACE
     "-Wno-gnu-zero-variadic-macro-arguments"
 
     # TODO: b/333712899 - Enable C23 extension warnings.
-    "-Wno-c23-extensions"
+    "-Wno-c2x-extensions"
 
     # TODO: b/335021928 - Enable C++ 20 extension warnings.
     "-Wno-c++20-extensions"
